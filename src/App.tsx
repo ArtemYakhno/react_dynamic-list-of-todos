@@ -24,50 +24,55 @@ export const App: React.FC = () => {
       return [];
     }
 
-    let prepereadArray: Todo[] = [];
+    let preparedArray: Todo[] = [];
 
     switch (filter) {
       case 'active': {
-        prepereadArray = [...todosFromServer].filter(todo => !todo.completed);
+        preparedArray = [...todosFromServer].filter(todo => !todo.completed);
         break;
       }
 
       case 'completed': {
-        prepereadArray = [...todosFromServer].filter(todo => todo.completed);
+        preparedArray = [...todosFromServer].filter(todo => todo.completed);
         break;
       }
 
       default: {
-        prepereadArray = [...todosFromServer];
+        preparedArray = [...todosFromServer];
       }
     }
 
     if (query) {
       const normalizedQuery = query.toLowerCase().trim();
 
-      prepereadArray = prepereadArray.filter(todo =>
+      preparedArray = preparedArray.filter(todo =>
         todo.title.toLowerCase().includes(normalizedQuery),
       );
     }
 
-    return prepereadArray;
+    return preparedArray;
   }, [filter, query, todosFromServer]);
 
   useEffect(() => {
-    const delayTimer = setTimeout(() => setLoading(true), 200);
+    // const delayTimer = setTimeout(() => setLoading(true), 200);
+    setLoading(true);
 
-    const todosPromise = getTodos()
+    getTodos()
       .then(setTodosFromServer)
       .catch(error => setErrorMessage(error.message))
-      .finally(() => clearTimeout(delayTimer));
+      .finally(() => setLoading(false));
 
-    const timerPromise = new Promise(resolve => setTimeout(resolve, 500));
+    // const timerPromise = new Promise(resolve => setTimeout(resolve, 500));
 
-    Promise.allSettled([todosPromise, timerPromise]).finally(() =>
-      setLoading(false),
-    );
+    // Promise.allSettled([todosPromise, timerPromise]).finally(() =>
+    //   setLoading(false),
+    // );
 
-    //Hi Luke, delayTimer, timerPromise, Promise.allSettled exist for smart data loading logic. However, unfortunately it doesn't work right now, because the initial value of loading is true, and it should be false. The tests couldn't pass through it, so I decided to do it this way. So ignore this smart logic.
+    return () => {
+      setTodosFromServer([]);
+      setErrorMessage('');
+      setLoading(true);
+    };
   }, []);
 
   const closeModal = useCallback(() => {
@@ -97,14 +102,14 @@ export const App: React.FC = () => {
 
             <div className="block">
               {loading && <Loader />}
-              {!loading && !errorMessage && filteredTodos.length > 0 && (
+              {!loading && !errorMessage && (
                 <TodoList
                   todos={filteredTodos}
                   selectedTodo={selectedTodo}
                   onSelect={setSelectedTodo}
                 />
               )}
-              {errorMessage && <p>Error occurreted: {errorMessage}</p>}
+              {errorMessage && <p>Error occurred: {errorMessage}</p>}
             </div>
           </div>
         </div>

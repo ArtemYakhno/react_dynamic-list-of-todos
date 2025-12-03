@@ -15,25 +15,24 @@ const TodoModalComponent: React.FC<Props> = ({ selectedTodo, onClose }) => {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    const delayTimer = setTimeout(() => setLoading(true), 200);
+    // const delayTimer = setTimeout(() => setLoading(true), 200);
+    setLoading(true);
 
-    const userPromise = getUser(selectedTodo.userId)
+    getUser(selectedTodo.userId)
       .then(setUser)
       .catch(error => setErrorMessage(error.message))
-      .finally(() => clearTimeout(delayTimer));
+      .finally(() => setLoading(false));
 
-    const timerPromise = new Promise(resolve => setTimeout(resolve, 500));
+    // const timerPromise = new Promise(resolve => setTimeout(resolve, 500));
 
-    //Hi Luke, delayTimer, timerPromise, Promise.allSettled exist for smart data loading logic. However, unfortunately it doesn't work right now, because the initial value of loading is true, and it should be false. The tests couldn't pass through it, so I decided to do it this way. So ignore this smart logic.
-
-    Promise.allSettled([userPromise, timerPromise]).finally(() =>
-      setLoading(false),
-    );
+    // Promise.allSettled([userPromise, timerPromise]).finally(() =>
+    //   setLoading(false),
+    // );
 
     return () => {
       setUser(null);
       setErrorMessage('');
-      setLoading(false);
+      setLoading(true);
     };
   }, [selectedTodo]);
 
@@ -42,7 +41,7 @@ const TodoModalComponent: React.FC<Props> = ({ selectedTodo, onClose }) => {
       <div className="modal-background" />
 
       {loading && <Loader />}
-      {!loading && !errorMessage && user && (
+      {!loading && !errorMessage && (
         <div className="modal-card">
           <header className="modal-card-head">
             <div
