@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import 'bulma/css/bulma.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 
@@ -12,51 +12,52 @@ import { Todo } from './types/Todo';
 import { FilterTodo } from './types/FilterTodo';
 
 export const App: React.FC = () => {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todosFromServer, setTodosFromServer] = useState<Todo[]>([]);
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FilterTodo>('all');
 
-  const filterTodos = useCallback(
-    (todosFromServer: Todo[]) => {
-      let prepereadArray: Todo[] = [];
+  const filteredTodos = useMemo(() => {
+    if (todosFromServer.length === 0) {
+      return [];
+    }
 
-      switch (filter) {
-        case 'active': {
-          prepereadArray = [...todosFromServer].filter(todo => !todo.completed);
-          break;
-        }
+    let prepereadArray: Todo[] = [];
 
-        case 'completed': {
-          prepereadArray = [...todosFromServer].filter(todo => todo.completed);
-          break;
-        }
-
-        default: {
-          prepereadArray = [...todosFromServer];
-        }
+    switch (filter) {
+      case 'active': {
+        prepereadArray = [...todosFromServer].filter(todo => !todo.completed);
+        break;
       }
 
-      if (query) {
-        const normalizedQuery = query.toLowerCase().trim();
-
-        prepereadArray = prepereadArray.filter(todo =>
-          todo.title.toLowerCase().includes(normalizedQuery),
-        );
+      case 'completed': {
+        prepereadArray = [...todosFromServer].filter(todo => todo.completed);
+        break;
       }
 
-      setTodos(prepereadArray);
-    },
-    [filter, query],
-  );
+      default: {
+        prepereadArray = [...todosFromServer];
+      }
+    }
+
+    if (query) {
+      const normalizedQuery = query.toLowerCase().trim();
+
+      prepereadArray = prepereadArray.filter(todo =>
+        todo.title.toLowerCase().includes(normalizedQuery),
+      );
+    }
+
+    return prepereadArray;
+  }, [filter, query, todosFromServer]);
 
   useEffect(() => {
     const delayTimer = setTimeout(() => setLoading(true), 200);
 
     const todosPromise = getTodos()
-      .then(filterTodos)
+      .then(setTodosFromServer)
       .catch(error => setErrorMessage(error.message))
       .finally(() => clearTimeout(delayTimer));
 
@@ -67,7 +68,7 @@ export const App: React.FC = () => {
     );
 
     //Hi Luke, delayTimer, timerPromise, Promise.allSettled exist for smart data loading logic. However, unfortunately it doesn't work right now, because the initial value of loading is true, and it should be false. The tests couldn't pass through it, so I decided to do it this way. So ignore this smart logic.
-  }, [filter, query, filterTodos]);
+  }, []);
 
   const closeModal = useCallback(() => {
     setSelectedTodo(null);
@@ -96,9 +97,9 @@ export const App: React.FC = () => {
 
             <div className="block">
               {loading && <Loader />}
-              {!loading && !errorMessage && todos.length > 0 && (
+              {!loading && !errorMessage && filteredTodos.length > 0 && (
                 <TodoList
-                  todos={todos}
+                  todos={filteredTodos}
                   selectedTodo={selectedTodo}
                   onSelect={setSelectedTodo}
                 />
