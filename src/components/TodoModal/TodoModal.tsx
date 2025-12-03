@@ -79,6 +79,7 @@ const TodoModalComponent: React.FC<Props> = ({ selectedTodo, onClose }) => {
           </div>
         </div>
       )}
+      {errorMessage && <p>Error occurreted: {errorMessage}</p>}
     </div>
   );
 };
